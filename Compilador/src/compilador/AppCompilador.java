@@ -1,5 +1,6 @@
 package compilador;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -26,9 +27,10 @@ public class AppCompilador extends JFrame implements ActionListener{
 	private JFileChooser ventanaArchivos;
 	private File archivo;
 	private JTextArea areaTexto;
+	private JScrollPane barrita; 
 	private JList<String> tokens;
 	private JTabbedPane documentos,consola,tabla;
-	private String [] titulos ={"Tipo","Nombre","Valor"};
+	private String [] titulos ={"Tipo","Nombre","Valor","Alcance","Renglon"};
 	DefaultTableModel modelo = new DefaultTableModel(new Object[0][0],titulos);
 	private JTable mitabla = new JTable(modelo);
 	private JButton btnAnalizar;
@@ -84,6 +86,12 @@ public class AppCompilador extends JFrame implements ActionListener{
 		areaTexto = new JTextArea();
 		ventanaArchivos= new JFileChooser("Guardar");
 		areaTexto.setFont(new Font("Consolas", Font.PLAIN, 12));
+		
+		barrita = new JScrollPane(areaTexto);
+		barrita.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		barrita.setPreferredSize(new Dimension(870, 65));
+		barrita.setRowHeaderView(areaTexto);
+		
 		documentos = new JTabbedPane();
 		consola = new JTabbedPane();
 		tabla = new JTabbedPane();
@@ -109,10 +117,11 @@ public class AppCompilador extends JFrame implements ActionListener{
 				tokens.setListData(analisador.getmistokens().toArray( new String [0]));
 				modelo = new DefaultTableModel(new Object[0][0],titulos);
 				mitabla.setModel(modelo);
-				for (int i = analisador.getIdenti().size()-1; i >=0; i--) {
-					Identificador id = analisador.getIdenti().get(i);
+				//for (int i = analisador.getTabla().size()-1; i >=0; i--) {
+				for (int i=0; i < analisador.getTabla().size(); i++) {
+					TabladeSimbolos id = analisador.getTabla().get(i);
 					if(!id.tipo.equals("")) {
-						Object datostabla[]= {id.tipo,id.nombre,id.valor};
+						Object datostabla[]= {id.tipo,id.nombre,id.valor,id.alcance,id.renglon};
 						modelo.addRow(datostabla);
 					}
 				}

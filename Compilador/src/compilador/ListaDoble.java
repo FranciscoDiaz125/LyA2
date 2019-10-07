@@ -1,6 +1,7 @@
 package compilador;
 
 public class ListaDoble<E>{
+	
 	private NodoDoble <E>Inicio;
 	private NodoDoble <E>Fin;
 	private int size=0;
@@ -23,6 +24,15 @@ public class ListaDoble<E>{
 		Fin=nuevo;
 		return true;
 	}
+	
+	public NodoDoble<E> avanzar (NodoDoble<E> dato){
+		NodoDoble <E>aux =dato;
+		aux=dato.siguiente;
+		
+		return aux;
+	}
+	
+	
 	public void mostrar() {
 		NodoDoble <E>Aux=Inicio;
 		while(Aux !=null){

@@ -12,6 +12,7 @@ public class Token
 	final static int CONSTANTE=6;
 	final static int IDENTIFICADOR=7;
 	final static int CLASE=8;
+
 	private final static String types[]= 
 	{
 	"Modificador",
@@ -24,13 +25,17 @@ public class Token
 	"Identificador",
 	"Declaracion de clase"
 	};
+	
 	private String valor;
+	
 	private int linea;
+	
 	public Token(String valor, int tipo, int linea) {
 		this.tipo=tipo;
 		this.valor=valor;
 		this.linea=linea;
 	}
+	
 	public int getTipo() {
 		return tipo;
 	}
@@ -43,6 +48,11 @@ public class Token
 	public void setValor(String valor) {
 		this.valor = valor;
 	}
+	
+	public String obtenertipo(int valor){
+		return types[valor];
+	}
+	
 	public String toString() {
 		return "Token encontrado.... " +types[tipo]+": "+valor;
 	}
