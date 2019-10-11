@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
+import javax.swing.plaf.synth.SynthSpinnerUI;
 public class Analisis
 {
 	int renglon=1;
@@ -115,7 +116,7 @@ public class Analisis
 		{
 			to =  nodo.dato;
 		
-			
+			try{
 			switch (to.getTipo()) // un switch para validar la estructura
 			{
 			case Token.MODIFICADOR:
@@ -126,21 +127,22 @@ public class Analisis
 				break;
 			case Token.IDENTIFICADOR:
 				// lo que puede seguir despues de un idetificador
-				
-				if(!(Arrays.asList("{","=",";","==",")").contains(nodo.siguiente.dato.getValor()))) 
+				try{
+					if((Arrays.asList("{","=",";","==",")").contains(nodo.siguiente.dato.getValor()))) 
+						if(nodo.anterior.dato.getValor().equals("class")) // se encontro la declaracion de la clase
+						{
+							tablasimbolos.add( new TabladeSimbolos(to.getValor(), " ", "class"," ",to.getLinea()));
+						}
+				}catch (Exception e){
 					impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un simbolo");
-				else
-					if(nodo.anterior.dato.getValor().equals("class")) // se encontro la declaracion de la clase
-					{
-						tablasimbolos.add( new TabladeSimbolos(to.getValor(), " ", "class"," ",to.getLinea()));
-					}
+					System.out.println(e.getMessage());
+				}
+				
 				break;
 			// Estos dos entran en el mismo caso
 			case Token.TIPO_DATO:
 			case Token.CLASE:
-				
-	
-				
+			
 				// si lo anterior fue modificador
 				if (nodo.anterior!=null) 
 					if(nodo.anterior.dato.getTipo()==Token.MODIFICADOR) {
@@ -185,31 +187,99 @@ public class Analisis
 				
 				else if (to.getValor().equals(";"))
 				{
+					
+					int aux=0;
+					
+					/////////////////////////////////////////////
+					/////////////////////////////////////////////
+					/////////////////////////////////////////////
+					/////////////////////////////////////////////
+					/////////////////////////////////////////////
+					/////////////////////////////////////////////
+					/////////////////////////////////////////////
+					
 					boolean banderita=false;
 					try
 					{
 
-					if (nodo.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR && nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE)
-						tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.dato.getValor(),nodo.anterior.dato.getValor(),nodo.anterior.anterior.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
-					else if (nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR&&nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE)
-					{
-						
-						for (int i = 0; i < tablasimbolos.size(); i++) {
-							if(tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.dato.getValor())){
-								tablasimbolos.get(i).setValor(nodo.anterior.dato.getValor());
-								banderita=true;
+						 if (nodo.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && nodo.anterior.dato.getTipo()==Token.IDENTIFICADOR){
+							tablasimbolos.add(new TabladeSimbolos(nodo.anterior.dato.getValor(),"",nodo.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
+
+						}
+						 else if (nodo.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR && nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE){
+
+								int x =0,auxRenglon=0;
+								boolean bandera=false;
+								for (int i = 0; i < tablasimbolos.size(); i++) {
+									if (tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.dato.getValor()) ){
+										x++;
+										auxRenglon=i;
+									}
+									
+								}
+								if(nodo.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && x>0 && nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR){
+									impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
+								bandera=true;
+								}
+								
+								if(!bandera)
+								tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.dato.getValor(),nodo.anterior.dato.getValor(),nodo.anterior.anterior.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
+								
 							}
-						}
+						 else if (nodo.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR&&nodo.anterior.anterior.anterior.anterior.dato.getValor().contains("=") && nodo.anterior.anterior.anterior.dato.getTipo()==Token.CONSTANTE && nodo.anterior.anterior.dato.getTipo()==Token.OPERADOR_ARITMETICO && nodo.anterior.dato.getTipo()==Token.CONSTANTE){
+							 for (int i = 0; i < tablasimbolos.size(); i++) {
+								if (tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor())){
+									aux=i;
+								}
+							}
+							 
+							 tablasimbolos.get(aux).setValor(Sumar(nodo.anterior.anterior.anterior.dato.getValor(),nodo.anterior.dato.getValor())+"");
+						 
+						 }
+						 
+						 else if (nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR&&nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE)
+							{
+							
+							 
+							 
+								for (int i = 0; i < tablasimbolos.size(); i++) {
+									if(tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.dato.getValor())){
+										tablasimbolos.get(i).setValor(nodo.anterior.dato.getValor());
+										banderita=true;
+									}
+								}
+								
+								if(!banderita){
+									impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba un Tipo de Dato");
+								}
+								
+							}
+						 
+						 else if (nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR&&nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE)
+							{
+							
+							 
+							 
+								for (int i = 0; i < tablasimbolos.size(); i++) {
+									if(tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.dato.getValor())){
+										tablasimbolos.get(i).setValor(nodo.anterior.dato.getValor());
+										banderita=true;
+									}
+								}
+								
+								if(!banderita){
+									impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba un Tipo de Dato");
+								}
+								
+							}
 						
-						if(!banderita){
-							impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba un Tipo de Dato");
-						}
-						
-					}
+					
+					
 					} catch (Exception e){
 						System.out.println(e.getMessage());
 					}
 
+	
 
 				}
 
@@ -269,12 +339,33 @@ public class Analisis
 					impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba una Constante/Identificador");
 				if(nodo.siguiente.dato.getTipo()!=Token.CONSTANTE && nodo.siguiente.dato.getTipo()!=Token.IDENTIFICADOR )
 					impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba una Constante/Identificador");
+				 
+				String operando1,operando2;
+				
+				operando1= TipoCadena(nodo.anterior.dato.getValor());
+				operando2= TipoCadena(nodo.siguiente.dato.getValor());
+				
+				if(!operando1.contains(operando2))
+					impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos ("+operando1+"/"+operando2+")");
+
+				
+				
 				break;
+				
+			case Token.OPERADOR_ARITMETICO:
+		
+				
+				break;
+	
 			}
 
 			
 			
-				
+			}catch (Exception e)
+			{
+				System.out.println(e.getMessage());
+			}
+			
 			
 			
 			analisisSintactio(nodo.siguiente);
@@ -284,6 +375,9 @@ public class Analisis
 	}
 	
 	
+	
+	
+	
 	public  Token AnalizadorSemantico (NodoDoble<Token> nodo){
 		
 		
@@ -291,13 +385,10 @@ public class Analisis
 		if(nodo!=null) // si no llego al ultimo de la lista
 		{
 			to =  nodo.dato;
-		
-			
-			
-		
+	
 			
 			String aux;
-			String aux2,auxiliarTipo;
+			String aux2,auxiliarTipo = "";
 			int aux3,renglon;
 
 			
@@ -308,9 +399,10 @@ public class Analisis
 				
 				if(aux.contains("int")){
 					aux2=tablasimbolos.get(i).getValor();
+					if(!aux2.isEmpty())
 					auxiliarTipo =TipoCadena(aux2);
 					
-					if (EsNumeroEntero(aux2) == false) {
+					if (EsNumeroEntero(aux2) == false && !aux2.isEmpty()) {
 						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un INT");
 	
 			        } 
@@ -318,9 +410,10 @@ public class Analisis
 				else if(aux.contains("float")){
 					
 					aux2=tablasimbolos.get(i).getValor();
+					if(!aux2.isEmpty())
 					auxiliarTipo =TipoCadena(aux2);
 					
-					if (Esfloat(aux2) == false) {
+					if (Esfloat(aux2) == false && !aux2.isEmpty()) {
 						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un FLOAT");
 	
 			        } 
@@ -330,9 +423,10 @@ public class Analisis
 				else if(aux.contains("char")){
 					
 					aux2=tablasimbolos.get(i).getValor();
+					if(!aux2.isEmpty())
 					auxiliarTipo =TipoCadena(aux2);
 					
-					if (EsChar(aux2) == false) {
+					if (EsChar(aux2) == false && !aux2.isEmpty()) {
 						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un CHAR");
 	
 			        } 
@@ -343,9 +437,10 @@ public class Analisis
 				}else if(aux.contains("boolean")){
 					
 					aux2=tablasimbolos.get(i).getValor();
+					if(!aux2.isEmpty())
 					auxiliarTipo =TipoCadena(aux2);
 					
-					if (EsBoolean(aux2) == false) {
+					if (EsBoolean(aux2) == false && !aux2.isEmpty() ) {
 						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un BOOLEAN");
 	
 			        } 
@@ -357,8 +452,7 @@ public class Analisis
 				
 			//Punto 3
 			
-					
-				
+
 				
 				
 				
@@ -397,15 +491,14 @@ public class Analisis
 			
 			for (int i = 0; i < tablasimbolos.size(); i++) {
 				
-				if(tablasimbolos.get(i).getNombre().contains(auxiliar)){
-					bandera2=true;
-				}
-				
+			if(tablasimbolos.get(i).getNombre().contains(auxiliar)){
+				bandera2=true;
+			}
 			}
 			
 			if(!bandera2)
 				impresion.add("Error semantico en linea "+to.getLinea()+ " se uso la variable "+auxiliar+" no está declarada");
-
+			
 
 		}
 		
@@ -552,5 +645,17 @@ public class Analisis
 	}
 	public ArrayList<String> getmistokens() {
 		return impresion;
+	}
+	
+
+
+	public int Sumar (String uno, String dos){
+		
+		int suma =0;
+		
+		suma = suma+Integer.parseInt(uno)+Integer.parseInt(dos);
+		
+		
+		return suma;
 	}
 }
