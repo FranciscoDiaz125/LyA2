@@ -19,6 +19,7 @@ public class TabladeSimbolos {
 		this.tipo = tipo;
 		this.alcance=alcance;
 		this.renglon=renglon;
+		
 	}
 	
 	
@@ -58,6 +59,7 @@ public class TabladeSimbolos {
 		this.tipo = tipo;
 	}
 	
+
 	
 
 }

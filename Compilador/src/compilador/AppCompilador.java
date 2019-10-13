@@ -1,5 +1,6 @@
 package compilador;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -27,13 +29,16 @@ public class AppCompilador extends JFrame implements ActionListener{
 	private JFileChooser ventanaArchivos;
 	private File archivo;
 	private JTextArea areaTexto;
+	public NumeroLinea numLinea;
 	private JScrollPane barrita; 
 	private JList<String> tokens;
 	private JTabbedPane documentos,consola,tabla;
 	private String [] titulos ={"Tipo","Nombre","Valor","Alcance","Renglon"};
 	DefaultTableModel modelo = new DefaultTableModel(new Object[0][0],titulos);
-	private JTable mitabla = new JTable(modelo);
+	public JTable mitabla = new JTable(modelo);
 	private JButton btnAnalizar;
+	public static ColorCeldas color = new ColorCeldas(4);
+
 	public static void main(String[] args) {
 		/*try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
@@ -47,6 +52,7 @@ public class AppCompilador extends JFrame implements ActionListener{
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		setLayout(new GridLayout(2,2));
+		//mitabla.setBackground(new Color(255,45,0));
 		setSize(600,450);
 		setLocationRelativeTo(null);
 		creaInterFaz();
@@ -85,18 +91,30 @@ public class AppCompilador extends JFrame implements ActionListener{
 		barraMenu.add(menuArchivo);
 		//barraMenu.add(MenuAnalisis);
 		areaTexto = new JTextArea();
+		
+	
+		
 		ventanaArchivos= new JFileChooser("Guardar");
 		areaTexto.setFont(new Font("Consolas", Font.PLAIN, 12));
 		
+		//barrita = new JScrollPane(areaTexto);
+		//barrita.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		//barrita.setPreferredSize(new Dimension(870, 65));
+		//barrita.setRowHeaderView(areaTexto);
+			
+
+		NumeroLinea lineNumber = new NumeroLinea(areaTexto);
+
 		barrita = new JScrollPane(areaTexto);
 		barrita.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		barrita.setPreferredSize(new Dimension(870, 65));
-		barrita.setRowHeaderView(areaTexto);
+		barrita.setRowHeaderView(lineNumber);
+		
 		
 		documentos = new JTabbedPane();
 		consola = new JTabbedPane();
 		tabla = new JTabbedPane();
-		documentos.addTab("Nuevo", new JScrollPane(areaTexto));
+		documentos.addTab("Nuevo",barrita);
 		documentos.setToolTipText("Aqui se muestra el codigo");
 		add(documentos);
 		tokens=new JList<String>();
@@ -108,6 +126,8 @@ public class AppCompilador extends JFrame implements ActionListener{
 		add(btnAnalizar);
 		add(tabla);
 		//documentos.add("Analizar", btnAnalizar);
+		
+		
 
 	}
 	@Override
@@ -117,12 +137,16 @@ public class AppCompilador extends JFrame implements ActionListener{
 				Analisis analisador = new Analisis(archivo.getAbsolutePath());
 				tokens.setListData(analisador.getmistokens().toArray( new String [0]));
 				modelo = new DefaultTableModel(new Object[0][0],titulos);
-				mitabla.setModel(modelo);
+
+			    mitabla.setDefaultRenderer(Object.class, color);
+
 				//for (int i = analisador.getTabla().size()-1; i >=0; i--) {
 				for (int i=0; i < analisador.getTabla().size(); i++) {
-					TabladeSimbolos id = analisador.getTabla().get(i);
+					TabladeSimbolos id = analisador.getTabla().get(i);						
+					mitabla.setModel(modelo);
 					if(!id.tipo.equals("")) {
 						Object datostabla[]= {id.tipo,id.nombre,id.valor,id.alcance,id.renglon};
+
 						modelo.addRow(datostabla);
 					}
 				}
@@ -192,4 +216,33 @@ public class AppCompilador extends JFrame implements ActionListener{
 			return false;
 		}
 	}
+	
+	
+	public static void enviarErrorSintactico (int error){
+		
+		color.erroresSintacticos.add(error);
+
+	}
+	
+
+	
+public static void enviarErrorSemantico (int error){
+		
+		color.erroresSemanticos.add(error);
+
+	}
+
+
+public static void eliminarErrorSintactico (){
+
+	color.erroresSintacticos.clear();
+
+}
+
+public static void eliminarErrorSemantico (){
+
+
+	color.erroresSemanticos.clear();
+
+}
 }

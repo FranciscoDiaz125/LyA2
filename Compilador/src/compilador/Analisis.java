@@ -1,4 +1,5 @@
 package compilador;
+import java.awt.Color;
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -11,8 +12,23 @@ public class Analisis
 	ArrayList<String> impresion; //para la salida
 	ListaDoble<Token> tokens;
 	final Token vacio=new Token("", 9,0);
-	boolean bandera=true;
+	boolean bandera=true,banderaclase=false;;
+	public ColorCeldas color = new ColorCeldas(4);
 	ArrayList<TabladeSimbolos> tablasimbolos = new ArrayList<TabladeSimbolos>();
+	String Anterior1Valor;
+	String Anterior2Valor;
+	String Anterior3Valor;
+	String Anterior4Valor;
+	String Anterior5Valor;
+	int Anterior1Tipo ;
+	int Anterior2Tipo;
+	int Anterior3Tipo;
+	int Anterior4Tipo;
+	int Anterior5Tipo;
+	String Siguiente1Valor;
+	String Siguiente2Valor;
+	int Siguiente1Tipo;	
+	
 	
 	public ArrayList<TabladeSimbolos> getTabla() {
 		return tablasimbolos ;
@@ -25,6 +41,13 @@ public class Analisis
 			analisisSintactio(tokens.getInicio());
 			AnalizadorSemantico(tokens.getInicio());
 			Semantico2(tokens.getInicio());
+			VerificarClase(tokens.getInicio());
+			VerificarClase(tokens.getInicio());
+			
+			if(!banderaclase){
+				impresion.add("Falta la inicialización de la clase!");
+			}
+			
 		}
 		if(impresion.get(impresion.size()-1).equals("No hay errores lexicos"))
 			impresion.add("No hay errores sintacticos");
@@ -63,6 +86,9 @@ public class Analisis
 	
 	
 	public void analisisLexico(String token) {
+		
+		AppCompilador.eliminarErrorSintactico();
+		AppCompilador.eliminarErrorSemantico();
 		int tipo=0;
 		//Se usan listas con los tipos de token
 		// Esto se asemeja a un in en base de datos 
@@ -79,7 +105,8 @@ public class Analisis
 			tipo = Token.OPERADOR_LOGICO; 
 		else if(Arrays.asList("+","-","*","/").contains(token))
 			tipo = Token.OPERADOR_ARITMETICO;
-		else if(Arrays.asList("True","False").contains(token)||Pattern.matches("^\\d+$",token)||Pattern.matches("[0-9]+.[0-9]+",token)) 
+		else if(Arrays.asList("True","False").contains(token)||Pattern.matches("^\\d+$",token)
+				||Pattern.matches("[0-9]+.[0-9]+",token)||Pattern.matches("'[a-zA-Z]'",token)) 
 			tipo = Token.CONSTANTE;
 		else if(token.equals("class")) 
 			tipo =Token.CLASE;
@@ -107,366 +134,457 @@ public class Analisis
 	
 	
 	
-	
-	
+
+
 
 	public Token analisisSintactio(NodoDoble<Token> nodo) {
+
 		Token  to;
+
+
 		if(nodo!=null) // si no llego al ultimo de la lista
 		{
 			to =  nodo.dato;
-		
+
+			
 			try{
-			switch (to.getTipo()) // un switch para validar la estructura
-			{
-			case Token.MODIFICADOR:
-				int sig=nodo.siguiente.dato.getTipo();
-				// aqui se valida que sea 'public int' o 'public class' 
-				if(sig!=Token.TIPO_DATO && sig!=Token.CLASE)// si lo que sigue 
-					impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un tipo de dato");
-				break;
-			case Token.IDENTIFICADOR:
-				// lo que puede seguir despues de un idetificador
-				try{
-					if((Arrays.asList("{","=",";","==",")").contains(nodo.siguiente.dato.getValor()))) 
-						if(nodo.anterior.dato.getValor().equals("class")) // se encontro la declaracion de la clase
-						{
-							tablasimbolos.add( new TabladeSimbolos(to.getValor(), " ", "class"," ",to.getLinea()));
-						}
-				}catch (Exception e){
-					impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un simbolo");
-					System.out.println(e.getMessage());
-				}
+
+				Anterior1Valor = nodo.anterior.dato.getValor();
+				Anterior1Tipo = nodo.anterior.dato.getTipo();
+				Anterior2Valor = nodo.anterior.anterior.dato.getValor();
+				Anterior2Tipo = nodo.anterior.anterior.dato.getTipo();
+				Anterior3Valor = nodo.anterior.anterior.anterior.dato.getValor();
+				Anterior3Tipo = nodo.anterior.anterior.anterior.dato.getTipo();
+				Anterior4Valor = nodo.anterior.anterior.anterior.anterior.dato.getValor();
+				Anterior4Tipo = nodo.anterior.anterior.anterior.anterior.dato.getTipo();
+				Anterior5Valor = nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor();
+				Anterior5Tipo= nodo.anterior.anterior.anterior.anterior.anterior.dato.getTipo();
 				
-				break;
-			// Estos dos entran en el mismo caso
-			case Token.TIPO_DATO:
-			case Token.CLASE:
+				
+			}catch (Exception e){
+				e.getMessage();
+			}
 			
-				// si lo anterior fue modificador
-				if (nodo.anterior!=null) 
-					if(nodo.anterior.dato.getTipo()==Token.MODIFICADOR) {
-						if(nodo.siguiente.dato.getTipo()!=Token.IDENTIFICADOR) 
-							impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un identificador");
-					}else
-						impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un modificador");
-				break;
-			case Token.SIMBOLO:
+			try{
+				Siguiente1Valor = nodo.siguiente.dato.getValor();
+				Siguiente1Tipo = nodo.siguiente.dato.getTipo();
+				Siguiente2Valor = nodo.siguiente.siguiente.dato.getValor();
 				
+				
+			}catch (Exception e){
+				e.getMessage();
+			}
 			
-				
-				
-				// Verificar que el mismo numero de parentesis y llaves que abren sean lo mismo que los que cierran
-				if(to.getValor().equals("}")) 
+
+			try{
+				switch (to.getTipo()) // un switch para validar la estructura
 				{
-					if(cuenta("{")!=cuenta("}"))
-						impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un {");
-				}else if(to.getValor().equals("{")) {
-					if(cuenta("{")!=cuenta("}"))
-						impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un }");
-				}
-			
-				else if(to.getValor().equals("(")) {
-					if(cuenta("(")!=cuenta(")"))
-						impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un )");
-				}else if(to.getValor().equals(")")) {
-					if(cuenta("(")!=cuenta(")"))
-						impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un (");
-				}
-				// verificar la asignacion
-				else if(to.getValor().equals("=")){
-					
-					
-						if(nodo.anterior.dato.getTipo()==Token.IDENTIFICADOR) {	
-							if(nodo.siguiente.dato.getTipo()!=Token.CONSTANTE)
+				case Token.MODIFICADOR:
+					int sig=Siguiente1Tipo;
+					// aqui se valida que sea 'public int' o 'public class' 
+					if(sig!=Token.TIPO_DATO && sig!=Token.CLASE)// si lo que sigue 
+					{
+						AppCompilador.enviarErrorSintactico(to.getLinea());
+						impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un tipo de dato");
+					}
+					break;
+				case Token.IDENTIFICADOR:
+					// lo que puede seguir despues de un idetificador
+					try{
+						if((Arrays.asList("{","=",";","==",")").contains(Siguiente1Valor))) {
+							if(Anterior1Valor.equals("class")) // se encontro la declaracion de la clase
+							{
+								tablasimbolos.add( new TabladeSimbolos(to.getValor(), " ", "class"," ",to.getLinea()));
+
+							}
+						}
+
+					}catch (Exception e){
+						AppCompilador.enviarErrorSintactico(to.getLinea());
+						impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un simbolo");
+						System.out.println(e.getMessage());
+					}
+
+					break;
+					// Estos dos entran en el mismo caso
+				case Token.TIPO_DATO:
+				case Token.CLASE:
+
+					// si lo anterior fue modificador
+					if (nodo.anterior!=null) 
+						if(Anterior1Tipo==Token.MODIFICADOR) {
+							if(Siguiente1Tipo!=Token.IDENTIFICADOR) {
+								AppCompilador.enviarErrorSintactico(to.getLinea());
+								impresion.add("Error sintactico en la linea "+to.getLinea()+" "
+										+ "se esperaba un identificador");
+							}
+
+						}else{
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+" se esperaba un modificador");
+
+						}
+					break;
+				case Token.SIMBOLO:
+
+
+
+
+					// Verificar que el mismo numero de parentesis y llaves que abren sean lo mismo que los que cierran
+					if(to.getValor().equals("}")) 
+					{
+						if(cuenta("{")!=cuenta("}")){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un {");
+						}
+					}else if(to.getValor().equals("{")) {
+						if(cuenta("{")!=cuenta("}")){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un }");
+						}
+					}
+
+					else if(to.getValor().equals("(")) {
+						if(cuenta("(")!=cuenta(")")){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un )");
+						}
+					}else if(to.getValor().equals(")")) {
+						if(cuenta("(")!=cuenta(")")){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+ " falta un (");
+						}
+					}
+					// verificar la asignacion
+					else if(to.getValor().equals("=")){
+
+
+						if(Anterior1Tipo==Token.IDENTIFICADOR) {	
+							if(Siguiente1Tipo!=Token.CONSTANTE){
+								AppCompilador.enviarErrorSintactico(to.getLinea());
 								impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba una constante");
-									
+
+							}
+
 						}
 					} 
-					
-				
-				else if (to.getValor().equals(";"))
-				{
-					
-					int aux=0;
-					
-					/////////////////////////////////////////////
-					/////////////////////////////////////////////
-					/////////////////////////////////////////////
-					/////////////////////////////////////////////
-					/////////////////////////////////////////////
-					/////////////////////////////////////////////
-					/////////////////////////////////////////////
-					
-					boolean banderita=false;
-					try
+
+
+					else if (to.getValor().equals(";"))
 					{
 
-						 if (nodo.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && nodo.anterior.dato.getTipo()==Token.IDENTIFICADOR){
-							tablasimbolos.add(new TabladeSimbolos(nodo.anterior.dato.getValor(),"",nodo.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
 
-						}
-						 else if (nodo.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR && nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE){
+						int aux=0;
+
+
+						boolean banderita=false;
+						try
+						{
+
+							if (Anterior2Tipo==Token.TIPO_DATO && Anterior1Tipo==Token.IDENTIFICADOR){
+								tablasimbolos.add(new TabladeSimbolos(Anterior1Valor,"",Anterior2Valor,"Local",to.getLinea()));
+
+							}
+							else if (Anterior4Tipo==Token.TIPO_DATO 
+									&& Anterior3Tipo==Token.IDENTIFICADOR 
+									&& Anterior2Tipo==Token.SIMBOLO
+									&&Anterior1Tipo==Token.CONSTANTE){
 
 								int x =0,auxRenglon=0;
 								boolean bandera=false;
 								for (int i = 0; i < tablasimbolos.size(); i++) {
-									if (tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.dato.getValor()) ){
+									if (tablasimbolos.get(i).getNombre().contains(Anterior3Valor) ){
 										x++;
 										auxRenglon=i;
 									}
-									
+
 								}
-								if(nodo.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && x>0 && nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR){
-									impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
-								bandera=true;
+								if(Anterior4Tipo==Token.TIPO_DATO && x>0 && Anterior3Tipo==Token.IDENTIFICADOR){
+									AppCompilador.enviarErrorSemantico(to.getLinea());
+									impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+Anterior3Valor+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
+									bandera=true;
 								}
-								
+
 								if(!bandera)
-								tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.dato.getValor(),nodo.anterior.dato.getValor(),nodo.anterior.anterior.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
-								
+									tablasimbolos.add(new TabladeSimbolos(Anterior3Valor,Anterior1Valor,Anterior4Valor,"Local",to.getLinea()));
+
 							}
-						 else if (nodo.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR&&nodo.anterior.anterior.anterior.anterior.dato.getValor().contains("=") && nodo.anterior.anterior.anterior.dato.getTipo()==Token.CONSTANTE && nodo.anterior.anterior.dato.getTipo()==Token.OPERADOR_ARITMETICO && nodo.anterior.dato.getTipo()==Token.CONSTANTE){
-							 for (int i = 0; i < tablasimbolos.size(); i++) {
-								if (tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor())){
-									aux=i;
-								}
-							}
-							 
-							 tablasimbolos.get(aux).setValor(Sumar(nodo.anterior.anterior.anterior.dato.getValor(),nodo.anterior.dato.getValor())+"");
-						 
-						 }
-						 
-						 else if (nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR&&nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE)
-							{
-							
-							 
-							 
+							else if (Anterior5Tipo==Token.IDENTIFICADOR
+									&&Anterior4Valor.contains("=") 
+									&& Anterior3Tipo==Token.CONSTANTE 
+									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO 
+									&& Anterior1Tipo==Token.CONSTANTE){
 								for (int i = 0; i < tablasimbolos.size(); i++) {
-									if(tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.dato.getValor())){
-										tablasimbolos.get(i).setValor(nodo.anterior.dato.getValor());
+									if (tablasimbolos.get(i).getNombre().contains(Anterior5Valor)){
+										aux=i;
+									}
+								}
+
+								tablasimbolos.get(aux).setValor(Sumar(Anterior3Valor,Anterior1Valor)+"");
+
+							}
+
+							else if (Anterior3Tipo==Token.IDENTIFICADOR
+									&&Anterior2Tipo==Token.SIMBOLO
+									&&Anterior1Tipo==Token.CONSTANTE)
+							{
+
+
+
+								for (int i = 0; i < tablasimbolos.size(); i++) {
+									if(tablasimbolos.get(i).getNombre().contains(Anterior3Valor)){
+										tablasimbolos.get(i).setValor(Anterior1Valor);
 										banderita=true;
 									}
 								}
-								
+
 								if(!banderita){
+									AppCompilador.enviarErrorSintactico(to.getLinea());
 									impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba un Tipo de Dato");
 								}
-								
+
 							}
-						 
-						 else if (nodo.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR&&nodo.anterior.anterior.dato.getTipo()==Token.SIMBOLO&&nodo.anterior.dato.getTipo()==Token.CONSTANTE)
+
+							else if (Anterior3Tipo==Token.IDENTIFICADOR
+									&&Anterior2Tipo==Token.SIMBOLO
+									&&Anterior1Tipo==Token.CONSTANTE)
 							{
-							
-							 
-							 
+
+
+
 								for (int i = 0; i < tablasimbolos.size(); i++) {
-									if(tablasimbolos.get(i).getNombre().contains(nodo.anterior.anterior.anterior.dato.getValor())){
-										tablasimbolos.get(i).setValor(nodo.anterior.dato.getValor());
+									if(tablasimbolos.get(i).getNombre().contains(Anterior3Valor)){
+										tablasimbolos.get(i).setValor(Anterior1Valor);
 										banderita=true;
 									}
 								}
-								
+
 								if(!banderita){
+									AppCompilador.enviarErrorSintactico(to.getLinea());
 									impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba un Tipo de Dato");
 								}
-								
+
 							}
-						
-					
-					
-					} catch (Exception e){
-						System.out.println(e.getMessage());
+
+
+
+						} catch (Exception e){
+							System.out.println(e.getMessage());
+						}
+
+
+
 					}
 
-	
+
+					break;
+
+				case Token.CONSTANTE:
+					if(Anterior1Valor.equals("="))
+						if(Siguiente1Tipo!=Token.OPERADOR_ARITMETICO
+						&&!Siguiente1Valor.equals(";")){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en linea "+to.getLinea()+ " asignacion no valida");
+						}
+
+
+					break;
+				case Token.PALABRA_RESERVADA:
+					// verificar esructura de if
+
+
+
+
+					if(to.getValor().equals("if"))
+					{
+						if(!Siguiente1Valor.equals("(")) {
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba un (");
+						}
+
+
+					}
+					else 
+					{
+						// si es un else, buscar en los anteriores y si no hay un if ocurrira un error
+						NodoDoble<Token> aux = nodo.anterior;
+						boolean bandera=false;
+						while(aux!=null&&!bandera) {
+							if(aux.dato.getValor().equals("if"))
+								bandera=true;
+							aux =aux.anterior;
+						}
+						if(!bandera){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en linea "+to.getLinea()+ " else no valido");
+
+						}
+					}
+					break;
+				case Token.OPERADOR_LOGICO:
+					// verificar que sea  'numero' + 'operador' + 'numero' 
+					if (to.getValor().equals("==")){
+						if (Anterior3Tipo!=Token.PALABRA_RESERVADA){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba una palabra reservada (if)");
+						}
+
+						if (Anterior2Tipo!=Token.SIMBOLO){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba un simbolo");
+						}
+						if (!Siguiente2Valor.contains(")")){
+							AppCompilador.enviarErrorSintactico(to.getLinea());
+							impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba un simbolo");
+
+						}
+					}
+					if(Anterior1Tipo!=Token.CONSTANTE && Anterior1Tipo!=Token.IDENTIFICADOR  ) {
+						AppCompilador.enviarErrorSintactico(to.getLinea());
+						impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba una Constante/Identificador");
+
+					}
+					if(Siguiente1Tipo!=Token.CONSTANTE && Siguiente1Tipo!=Token.IDENTIFICADOR ){
+						AppCompilador.enviarErrorSintactico(to.getLinea());
+						impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba una Constante/Identificador");
+
+					}
+
+					String operando1,operando2;
+
+					operando1= TipoCadena(Anterior1Valor);
+					operando2= TipoCadena(Siguiente1Valor);
+
+					if(!operando1.contains(operando2)){
+						AppCompilador.enviarErrorSemantico(to.getLinea());
+						impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos ("+operando1+"/"+operando2+")");
+
+					}
+
+
+
+					break;
+
+				case Token.OPERADOR_ARITMETICO:
+
+
+					break;
 
 				}
 
-				
-				break;
-			
-			case Token.CONSTANTE:
-				if(nodo.anterior.dato.getValor().equals("="))
-					if(nodo.siguiente.dato.getTipo()!=Token.OPERADOR_ARITMETICO&&!nodo.siguiente.dato.getValor().equals(";"))
-						impresion.add("Error sintactico en linea "+to.getLinea()+ " asignacion no valida");
-				
-		
-				break;
-			case Token.PALABRA_RESERVADA:
-				// verificar esructura de if
-				
-	
-				
-				
-				if(to.getValor().equals("if"))
-				{
-					if(!nodo.siguiente.dato.getValor().equals("(")) {
-						impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba un (");
-					}
-					
-										
-				}
-				else 
-				{
-					// si es un else, buscar en los anteriores y si no hay un if ocurrira un error
-					NodoDoble<Token> aux = nodo.anterior;
-					boolean bandera=false;
-					while(aux!=null&&!bandera) {
-						if(aux.dato.getValor().equals("if"))
-							bandera=true;
-						aux =aux.anterior;
-					}
-					if(!bandera)
-						impresion.add("Error sintactico en linea "+to.getLinea()+ " else no valido");
-				}
-				break;
-			case Token.OPERADOR_LOGICO:
-				// verificar que sea  'numero' + 'operador' + 'numero' 
-				if (to.getValor().equals("==")){
-					if (nodo.anterior.anterior.anterior.dato.getTipo()!=Token.PALABRA_RESERVADA){
-						impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba una palabra reservada (if)");
-					}
-					
-					if (nodo.anterior.anterior.dato.getTipo()!=Token.SIMBOLO){
-						impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba un simbolo");
-					}
-					if (!nodo.siguiente.siguiente.dato.getValor().contains(")")){
-						impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba un simbolo");
-					}
-				}
-				if(nodo.anterior.dato.getTipo()!=Token.CONSTANTE && nodo.anterior.dato.getTipo()!=Token.IDENTIFICADOR  ) 
-					impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba una Constante/Identificador");
-				if(nodo.siguiente.dato.getTipo()!=Token.CONSTANTE && nodo.siguiente.dato.getTipo()!=Token.IDENTIFICADOR )
-					impresion.add("Error sintactico en linea "+to.getLinea()+ " se esperaba una Constante/Identificador");
-				 
-				String operando1,operando2;
-				
-				operando1= TipoCadena(nodo.anterior.dato.getValor());
-				operando2= TipoCadena(nodo.siguiente.dato.getValor());
-				
-				if(!operando1.contains(operando2))
-					impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos ("+operando1+"/"+operando2+")");
 
-				
-				
-				break;
-				
-			case Token.OPERADOR_ARITMETICO:
-		
-				
-				break;
-	
-			}
 
-			
-			
 			}catch (Exception e)
 			{
 				System.out.println(e.getMessage());
 			}
-			
-			
-			
+
+
+
 			analisisSintactio(nodo.siguiente);
 			return to;
 		}
 		return  vacio;// para no regresar null y evitar null pointer
 	}
+
+
 	
-	
-	
-	
-	
+
+
 	public  Token AnalizadorSemantico (NodoDoble<Token> nodo){
-		
-		
+
+
 		Token  to;
 		if(nodo!=null) // si no llego al ultimo de la lista
 		{
 			to =  nodo.dato;
-	
-			
+
+
 			String aux;
 			String aux2,auxiliarTipo = "";
 			int aux3,renglon;
 
-			
+
 			for (int i = 0; i < tablasimbolos.size(); i++) {
-				
+
 				aux = tablasimbolos.get(i).tipo;
 				renglon = tablasimbolos.get(i).getRenglon();
-				
+
 				if(aux.contains("int")){
 					aux2=tablasimbolos.get(i).getValor();
 					if(!aux2.isEmpty())
-					auxiliarTipo =TipoCadena(aux2);
-					
+						auxiliarTipo =TipoCadena(aux2);
+
 					if (EsNumeroEntero(aux2) == false && !aux2.isEmpty()) {
+						AppCompilador.enviarErrorSemantico(renglon);
 						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un INT");
-	
-			        } 
+
+
+					} 
 				}
 				else if(aux.contains("float")){
-					
+
 					aux2=tablasimbolos.get(i).getValor();
 					if(!aux2.isEmpty())
-					auxiliarTipo =TipoCadena(aux2);
-					
+						auxiliarTipo =TipoCadena(aux2);
+
 					if (Esfloat(aux2) == false && !aux2.isEmpty()) {
+						AppCompilador.enviarErrorSemantico(renglon);
 						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un FLOAT");
-	
-			        } 
-					
-					
+
+					} 
+
+
 				}
 				else if(aux.contains("char")){
-					
-					aux2=tablasimbolos.get(i).getValor();
-					if(!aux2.isEmpty())
-					auxiliarTipo =TipoCadena(aux2);
-					
-					if (EsChar(aux2) == false && !aux2.isEmpty()) {
-						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un CHAR");
-	
-			        } 
-					
-					
-					
-					
-				}else if(aux.contains("boolean")){
-					
-					aux2=tablasimbolos.get(i).getValor();
-					if(!aux2.isEmpty())
-					auxiliarTipo =TipoCadena(aux2);
-					
-					if (EsBoolean(aux2) == false && !aux2.isEmpty() ) {
-						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un BOOLEAN");
-	
-			        } 
-					
-					
-				
-				
-				
-				
-			//Punto 3
-			
 
-				
-				
-				
+					aux2=tablasimbolos.get(i).getValor();
+					if(!aux2.isEmpty())
+						auxiliarTipo =TipoCadena(aux2);
+
+					if (EsChar(aux2) == false && !aux2.isEmpty()) {
+						AppCompilador.enviarErrorSemantico(renglon);
+						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un CHAR");
+
+					} 
+
+
+
+
+				}else if(aux.contains("boolean")){
+
+					aux2=tablasimbolos.get(i).getValor();
+					if(!aux2.isEmpty())
+						auxiliarTipo =TipoCadena(aux2);
+
+					if (EsBoolean(aux2) == false && !aux2.isEmpty() ) {
+						AppCompilador.enviarErrorSemantico(renglon);
+						impresion.add("Error Semantico en la linea "+renglon+ ", se recibió un "+auxiliarTipo+ " y se esperaba un BOOLEAN");
+
+					} 
+
+
+
+
+
+
+					//Punto 3
+
+
+
+
+
+				}
+
+
+
 			}
-			
-			
-			
-		}
-		
-			
-		
-		
-		
-			
+
+
+
+
+
+
 		}
 		
 		
@@ -477,7 +595,7 @@ public class Analisis
 		
 	}
 	
-	
+
 	public Token Semantico2(NodoDoble<Token> nodo) {
 		Token  to;
 		if(nodo!=null) // si no llego al ultimo de la lista
@@ -486,84 +604,112 @@ public class Analisis
 
 
 			if(to.getTipo()==Token.IDENTIFICADOR){
-			String auxiliar = to.getValor();
-			boolean bandera2 = false;
-			
-			for (int i = 0; i < tablasimbolos.size(); i++) {
-				
-			if(tablasimbolos.get(i).getNombre().contains(auxiliar)){
-				bandera2=true;
-			}
-			}
-			
-			if(!bandera2)
-				impresion.add("Error semantico en linea "+to.getLinea()+ " se uso la variable "+auxiliar+" no está declarada");
-			
+				String auxiliar = to.getValor();
+				boolean bandera2 = false;
 
+				for (int i = 0; i < tablasimbolos.size(); i++) {
+
+					if(tablasimbolos.get(i).getNombre().contains(auxiliar)){
+						bandera2=true;
+					}
+				}
+
+				if(!bandera2){
+					AppCompilador.enviarErrorSemantico(to.getLinea());
+					impresion.add("Error semantico en linea "+to.getLinea()+ " se uso la variable "+auxiliar+" no está declarada");
+
+				}
+
+
+			}
+
+			Semantico2(nodo.siguiente);
+			return to;
 		}
-		
-		Semantico2(nodo.siguiente);
-		return to;
-	}
 		return vacio;
 	}
 
-	
+
+	public Token VerificarClase(NodoDoble<Token> nodo) {
+		Token  to;
+
+
+		if(banderaclase){
+			return vacio;
+		}
+
+		if(nodo!=null) // si no llego al ultimo de la lista
+		{
+			to =  nodo.dato;
+
+
+			if(to.getTipo()==Token.CLASE){
+
+				banderaclase= true;
+
+			}
+
+			VerificarClase(nodo.siguiente);
+			return to;
+		}
+		return vacio;
+	}
+
 	public static boolean EsNumeroEntero(String cadena) {
 
-        boolean resultado;
+		boolean resultado;
 
-        try {
-            Integer.parseInt(cadena);
-            resultado = true;
-        } catch (NumberFormatException excepcion) {
-            resultado = false;
-        }
+		try {
+			Integer.parseInt(cadena);
+			resultado = true;
+		} catch (NumberFormatException excepcion) {
+			resultado = false;
+		}
 
-        return resultado;
-    }
-	
+		return resultado;
+	}
+
 	public static boolean Esfloat(String cadena) {
 
-        boolean resultado;
+		boolean resultado;
 
-        try {
-            Float.parseFloat(cadena);
-            resultado = true;
-        } catch (NumberFormatException excepcion) {
-            resultado = false;
-        }
+		try {
+			Float.parseFloat(cadena);
+			resultado = true;
+		} catch (NumberFormatException excepcion) {
+			resultado = false;
+		}
 
-        return resultado;
-    }
-	
-	
+		return resultado;
+	}
+
+
 	public static boolean EsChar(String cadena) {
 
-        boolean resultado;
+		boolean resultado;
 
-       if(cadena.length()==1)
-    	   return true;
-    			   return false;
+		if(Pattern.matches("'[a-zA-Z]'",cadena))
+			return true;
+		return false;
 
-    }
-	
-	
+	}
+
+
 	public static boolean EsBoolean(String cadena) {
 
 
-      if(cadena.contains("True")||cadena.contains("False"))
-    	  return true;
-      		return false;
+		if(cadena.contains("True")||cadena.contains("False"))
+			return true;
+		return false;
 
-    }
-	
-	
+	}
+
+
 	public static String TipoCadena(String cadena) {
 
-        String resultado= "hola";
+		String resultado= "";
 
-        /*try {
+		/*try {
             Integer.parseInt(cadena);
             resultado = "INT";
             return resultado;
@@ -577,38 +723,38 @@ public class Analisis
         } catch (NumberFormatException excepcion) {
         }
 
-        
+
         try {
         	Float.parseFloat(cadena);
             resultado = "FLOAT";
             return resultado;
         } catch (NumberFormatException excepcion) {
         }
-        */
+		 */
 
-        if(Pattern.matches("[0-9]+",cadena)){
-        	resultado = "INT";
-        	return resultado;
-        }
-        
-        if(Pattern.matches("[0-9]+.[0-9]+",cadena)){
-        	resultado = "FLOAT";
-        }
-        
-        
-        if(Pattern.matches("[a-zA-Z]",cadena)){
-        	resultado = "CHAR";
-        }
-        
-        if(cadena.contains("True")||cadena.contains("False")){
-        	resultado = "BOOLEAN";
-        }
-        
-        return resultado;
-    }
-	
-	
-	
+		if(Pattern.matches("[0-9]+",cadena)){
+			resultado = "INT";
+			return resultado;
+		}
+
+		if(Pattern.matches("[0-9]+.[0-9]+",cadena)){
+			resultado = "FLOAT";
+		}
+
+
+		if(Pattern.matches("'[a-zA-Z]'",cadena)){
+			resultado = "CHAR";
+		}
+
+		if(cadena.contains("True")||cadena.contains("False")){
+			resultado = "BOOLEAN";
+		}
+
+		return resultado;
+	}
+
+
+
 	// por si alguien escribe todo pegado 
 	public String separaDelimitadores(String linea){
 		for (String string : Arrays.asList("(",")","{","}","=",";")) {
@@ -633,7 +779,7 @@ public class Analisis
 		return linea;
 	}
 	public int cuenta (String token) {
-		
+
 		int conta=0;
 		NodoDoble<Token> Aux=tokens.getInicio();
 		while(Aux !=null){
@@ -646,16 +792,16 @@ public class Analisis
 	public ArrayList<String> getmistokens() {
 		return impresion;
 	}
-	
+
 
 
 	public int Sumar (String uno, String dos){
-		
+
 		int suma =0;
-		
+
 		suma = suma+Integer.parseInt(uno)+Integer.parseInt(dos);
-		
-		
+
+
 		return suma;
 	}
 }
