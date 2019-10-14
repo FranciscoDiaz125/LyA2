@@ -299,7 +299,7 @@ public class Analisis
 						{
 
 							if (Anterior2Tipo==Token.TIPO_DATO && Anterior1Tipo==Token.IDENTIFICADOR){
-								tablasimbolos.add(new TabladeSimbolos(Anterior1Valor,"",Anterior2Valor,"Local",to.getLinea()));
+								tablasimbolos.add(new TabladeSimbolos(Anterior1Valor,"",Anterior2Valor,"Global",to.getLinea()));
 
 							}
 							
@@ -332,7 +332,7 @@ public class Analisis
 								}
 
 								if(!bandera)
-									tablasimbolos.add(new TabladeSimbolos(Anterior3Valor,Anterior1Valor,Anterior4Valor,"Local",to.getLinea()));
+									tablasimbolos.add(new TabladeSimbolos(Anterior3Valor,Anterior1Valor,Anterior4Valor,"Global",to.getLinea()));
 
 							}
 							else if (Anterior5Tipo==Token.IDENTIFICADOR
@@ -357,7 +357,7 @@ public class Analisis
 									banderaErroresSemanticos=true;
 									impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
 								} else {
-									tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
+									tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Global",to.getLinea()));
 								}
 									
 								
@@ -417,7 +417,7 @@ public class Analisis
 										banderaErroresSemanticos=true;
 										impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
 									} else {
-										tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
+										tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Global",to.getLinea()));
 									}
 										
 									
@@ -476,7 +476,7 @@ public class Analisis
 									banderaErroresSemanticos=true;
 									impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
 								} else {
-									tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Local",to.getLinea()));
+									tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Global",to.getLinea()));
 								}
 									
 								
