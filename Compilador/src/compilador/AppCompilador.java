@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -32,12 +33,16 @@ public class AppCompilador extends JFrame implements ActionListener{
 	public NumeroLinea numLinea;
 	private JScrollPane barrita; 
 	private JList<String> tokens;
-	private JTabbedPane documentos,consola,tabla;
+	private JTabbedPane documentos,consola,tabla,tabla2;
 	private String [] titulos ={"Tipo","Nombre","Valor","Alcance","Renglon"};
 	DefaultTableModel modelo = new DefaultTableModel(new Object[0][0],titulos);
+	private String [] titulos2 ={"Operador","Argumento 1","Argumento 2","Resultado"};
+	DefaultTableModel modelo2 = new DefaultTableModel(new Object[0][0],titulos2);
 	public JTable mitabla = new JTable(modelo);
+	public JTable mitabla2 = new JTable(modelo2);
 	private JButton btnAnalizar;
 	public static ColorCeldas color = new ColorCeldas(4);
+	public JLabel homero;
 
 	public static void main(String[] args) {
 		/*try {
@@ -53,7 +58,8 @@ public class AppCompilador extends JFrame implements ActionListener{
 		
 		setLayout(new GridLayout(2,2));
 		//mitabla.setBackground(new Color(255,45,0));
-		setSize(600,450);
+		setSize(850,550);
+		setResizable(false);
 		setLocationRelativeTo(null);
 		creaInterFaz();
 		setVisible(true);
@@ -114,6 +120,8 @@ public class AppCompilador extends JFrame implements ActionListener{
 		documentos = new JTabbedPane();
 		consola = new JTabbedPane();
 		tabla = new JTabbedPane();
+		tabla2 = new JTabbedPane();
+
 		documentos.addTab("Nuevo",barrita);
 		documentos.setToolTipText("Aqui se muestra el codigo");
 		add(documentos);
@@ -121,10 +129,19 @@ public class AppCompilador extends JFrame implements ActionListener{
 		consola.addTab("Consola",new JScrollPane(tokens));
 		//consola.addTab("Tabla",new JScrollPane(mitabla));
 		tabla.addTab("Tabla de simbolos",new JScrollPane(mitabla) );
+		tabla2.addTab("Cuadruplos",new JScrollPane(mitabla2) );
 		add(consola);
 		consola.setToolTipText("Aqui se muestra el resultado del analisis");
-		add(btnAnalizar);
 		add(tabla);
+		add(btnAnalizar);
+		homero = new JLabel();
+		homero.setIcon(new ImageIcon("homero.gif"));
+		add(homero);
+		add(tabla2);
+
+		
+		
+	
 		//documentos.add("Analizar", btnAnalizar);
 		
 		
@@ -137,10 +154,10 @@ public class AppCompilador extends JFrame implements ActionListener{
 				Analisis analisador = new Analisis(archivo.getAbsolutePath());
 				tokens.setListData(analisador.getmistokens().toArray( new String [0]));
 				modelo = new DefaultTableModel(new Object[0][0],titulos);
+				modelo2 = new DefaultTableModel(new Object[0][0],titulos2);
 
 			    mitabla.setDefaultRenderer(Object.class, color);
-
-				//for (int i = analisador.getTabla().size()-1; i >=0; i--) {
+			  
 				for (int i=0; i < analisador.getTabla().size(); i++) {
 					TabladeSimbolos id = analisador.getTabla().get(i);						
 					mitabla.setModel(modelo);
@@ -149,6 +166,16 @@ public class AppCompilador extends JFrame implements ActionListener{
 
 						modelo.addRow(datostabla);
 					}
+				}
+				
+
+				for (int i=0; i < analisador.getTabla2().size(); i++) {
+					Arbolito id2 =analisador.getTabla2().get(i);								
+					mitabla2.setModel(modelo2);
+						Object datostabla2[]= {id2.operador,id2.argumento1,id2.argumento2,id2.resultado};
+
+						modelo2.addRow(datostabla2);
+					
 				}
 
 			}

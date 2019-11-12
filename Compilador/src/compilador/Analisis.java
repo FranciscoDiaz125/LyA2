@@ -15,11 +15,16 @@ public class Analisis
 	boolean bandera=true,banderaclase=false, banderaErroresSemanticos = false,banderaErroresSintacticos = false;
 	public ColorCeldas color = new ColorCeldas(4);
 	ArrayList<TabladeSimbolos> tablasimbolos = new ArrayList<TabladeSimbolos>();
+	ArrayList<Arbolito> arbol = new ArrayList<Arbolito>();
+	ArrayList<String> expresion = new ArrayList<String>();
+
+
 	String Anterior1Valor;
 	String Anterior2Valor;
 	String Anterior3Valor;
 	String Anterior4Valor;
 	String Anterior5Valor;
+	String cadenaauxiliar ="";
 	int Anterior1Tipo ;
 	int Anterior2Tipo;
 	int Anterior3Tipo;
@@ -33,6 +38,11 @@ public class Analisis
 	public ArrayList<TabladeSimbolos> getTabla() {
 		return tablasimbolos ;
 	}
+	
+	public ArrayList<Arbolito> getTabla2() {
+		return arbol ;
+	}
+	
 	public Analisis(String ruta) {//Recibe el nombre del archivo de texto
 		analisaCodigo(ruta);
 		if(bandera) {
@@ -135,6 +145,9 @@ public class Analisis
 		}
 		tokens.insertar(new Token(token,tipo,renglon));
 		impresion.add(new Token(token,tipo,renglon).toString());
+		
+
+		
 	}
 	
 	
@@ -335,184 +348,170 @@ public class Analisis
 									tablasimbolos.add(new TabladeSimbolos(Anterior3Valor,Anterior1Valor,Anterior4Valor,"Global",to.getLinea()));
 
 							}
-							else if (Anterior5Tipo==Token.IDENTIFICADOR
-									&&Anterior4Valor.contains("=") 
-									&& Anterior3Tipo==Token.CONSTANTE 
-									&& Anterior2Valor.equals("+")
+							else if (Anterior3Tipo==Token.CONSTANTE 
+									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO
 									&& Anterior1Tipo==Token.CONSTANTE){
 								
-								
-								if(nodo.anterior.anterior.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.MODIFICADOR){
-								
-								int x =0,auxRenglon=0;
-								for (int i = 0; i < tablasimbolos.size(); i++) {
-									if (tablasimbolos.get(i).getNombre().equals(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()) ){
-										x++;
-										auxRenglon=i;
-									}
-
-								}
-								if(nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && x>0 && nodo.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR){
-									AppCompilador.enviarErrorSemantico(to.getLinea());
-									banderaErroresSemanticos=true;
-									impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
-								} else {
-									tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Global",to.getLinea()));
-								}
+								NodoDoble<Token> nodoaux = nodo;
+								NodoDoble<Token> nodoaux2 = nodo;
+								NodoDoble<Token> nodoaux3 = nodo;
+								while(nodoaux!=null){
+									String aux2 = nodoaux.anterior.dato.getValor();
+									System.out.println(aux2);
+									if(aux2.contains("="))
+										break;
 									
-								
-							}
-							
-							
-							for (int i = 0; i < tablasimbolos.size(); i++) {
-								if (tablasimbolos.get(i).getNombre().equals(Anterior5Valor)){
-									aux=i;
+									nodoaux = nodoaux.anterior;
 								}
-							}
-							
-							String tipo ="";
-							tipo = tablasimbolos.get(aux).getTipo();
-							
-							if (!tipo.equals(TipoCadena(Anterior3Valor)) && !tipo.equals(TipoCadena(Anterior1Valor)) ){
-								AppCompilador.enviarErrorSemantico(to.getLinea());
-								banderaErroresSemanticos=true;
-								impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos con el de la variable");
-							}else{
-								
-								if ((Anterior3Valor.equals("True") 
-										|| Anterior3Valor.equals("False"))&&(Anterior1Valor.equals("True") 
-												|| Anterior1Valor.equals("False"))){
-									impresion.add("Error semantico en linea "+to.getLinea()+ ", no se pueden sumar 2 valores booleanos");
-								}
-								tablasimbolos.get(aux).setValor(Sumar(Anterior3Valor,Anterior1Valor)+"");
-
-							}
-							
 						
-
-							
 								
-
-						}
-
-							else if (Anterior5Tipo==Token.IDENTIFICADOR
-									&&Anterior4Valor.contains("=") 
-									&& Anterior3Tipo==Token.CONSTANTE 
-									&& Anterior2Valor.equals("*")
-									&& Anterior1Tipo==Token.CONSTANTE){
-								
-								
-									if(nodo.anterior.anterior.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.MODIFICADOR){
+								while(nodoaux!=null){
+									String aux2 = nodoaux.dato.getValor();
+									System.out.println(aux2);
+									if(aux2.contains(";"))
+										break;
 									
-									int x =0,auxRenglon=0;
-									for (int i = 0; i < tablasimbolos.size(); i++) {
-										if (tablasimbolos.get(i).getNombre().equals(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()) ){
-											x++;
-											auxRenglon=i;
+									expresion.add(aux2);
+									nodoaux = nodoaux.siguiente;
+								}
+								
+								
+								ArrayList<String> expresion2 = new ArrayList<String>(expresion);
+
+										for (int i = 0; i < expresion.size(); i++) {
+											
+											if(expresion.get(i).contains("("))
+											expresion.set(i, "ParAbierto");
+											
+											else if(expresion.get(i).contains(")"))
+												expresion.set(i, "ParCerrado");
+											
+											else if(expresion.get(i).contains("/"))
+												expresion.set(i, "Div");
+											
+											else if(expresion.get(i).contains("*"))
+												expresion.set(i, "Multi");
+											
+											else if(expresion.get(i).contains("+"))
+												expresion.set(i, "Suma");
+											
+											else if(expresion.get(i).contains("-"))
+												expresion.set(i, "Resta");
+											
 										}
-
-									}
-									if(nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && x>0 && nodo.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR){
-										AppCompilador.enviarErrorSemantico(to.getLinea());
-										banderaErroresSemanticos=true;
-										impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
-									} else {
-										tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Global",to.getLinea()));
-									}
 										
+										int Resultadofinal=0;
+			
+										int contador =1;
+										for (int i = 0; i < expresion.size(); i++) {
+											
+											if(expresion.get(i).contains("Multi")){
+												Resultadofinal =  multiplicar(expresion.get(i-1), expresion.get(i+1));
+											
+												expresion2.set(i,"temp"+contador);
+											
+	
+												arbol.add(new Arbolito("*",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
+												expresion2.remove(i+1);
+												expresion2.remove(i-1);
+												
+												expresion.set(i-1,Resultadofinal+"" );
+												expresion.remove(i);
+												expresion.remove(i);
+												
+												
+												i--;
+												contador++;
+											}
+											
+											
+										}
+				
+										
+										for (int i = 0; i < expresion.size(); i++) {
+											
+											if(expresion.get(i).contains("Suma")){
+												Resultadofinal =  Sumar(expresion.get(i-1), expresion.get(i+1));
+											
+												expresion2.set(i,"temp"+contador);
+												
+												
+												arbol.add(new Arbolito("+",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
+												expresion2.remove(i+1);
+												expresion2.remove(i-1);
+												
+												expresion.set(i-1,Resultadofinal+"" );
+												expresion.remove(i);
+												expresion.remove(i);
+												i--;
+												contador++;
+											}
+											
+										}
+										
+										for (int i = 0; i < expresion.size(); i++) {
+											
+											if(expresion.get(i).contains("Resta")){
+												Resultadofinal =  Restar(expresion.get(i-1), expresion.get(i+1));
 									
-								}
-								
-								
-								for (int i = 0; i < tablasimbolos.size(); i++) {
-									if (tablasimbolos.get(i).getNombre().equals(Anterior5Valor)){
-										aux=i;
-									}
-								}
-								
-								String tipo ="";
-								tipo = tablasimbolos.get(aux).getTipo();
-								
-								if (!tipo.equals(TipoCadena(Anterior3Valor)) && !tipo.equals(TipoCadena(Anterior1Valor)) ){
-									AppCompilador.enviarErrorSemantico(to.getLinea());
-									banderaErroresSemanticos=true;
-									impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos con el de la variable");
-								}else{
+
+												expresion2.set(i-1,"temp"+contador);
+												expresion2.remove(i);
+												expresion2.remove(i);
+	
+												arbol.add(new Arbolito("-",expresion.get(i-1),expresion.get(i+1),expresion2.get(i-1)));
+
+												expresion.set(i-1,Resultadofinal+"" );
+												expresion.remove(i);
+												expresion.remove(i);
+												i--;
+												contador++;
+											}
+											
+										}
+										
+
+										
+
+				
+
+										int Tipo, nombre;
+										String auxTipo ="", auxNombre = "";
+										while(nodoaux2!=null){
+											Tipo = nodoaux2.anterior.dato.getTipo();
+											System.out.println(Tipo);
+											if(Tipo==2 ){
+												auxTipo = nodoaux2.anterior.dato.getValor();
+												break;
+
+											}
+											
+											nodoaux2 = nodoaux2.anterior;
+										}
 									
-									if ((Anterior3Valor.equals("True") 
-											|| Anterior3Valor.equals("False"))&&(Anterior1Valor.equals("True") 
-													|| Anterior1Valor.equals("False"))){
-										impresion.add("Error semantico en linea "+to.getLinea()+ ", no se pueden multiplicar 2 valores booleanos");
-									}
-									tablasimbolos.get(aux).setValor(multiplicar(Anterior3Valor,Anterior1Valor)+"");
+										while(nodoaux3!=null){
+											nombre = nodoaux3.anterior.dato.getTipo();
+											System.out.println(nombre);
+											if(nombre==7){
+												auxNombre = nodoaux3.anterior.dato.getValor();
+												break;
+											}
+											
+											nodoaux3 = nodoaux3.anterior;
+										}
+										
+									arbol.add(new Arbolito("=",expresion2.get(0)," ",auxNombre));
+									tablasimbolos.add(new TabladeSimbolos(auxNombre,Resultadofinal+"",auxTipo,"Global",to.getLinea()));
 
-								}
-								
-							
-
-								
 									
-
-							}
-							else if (Anterior5Tipo==Token.IDENTIFICADOR
-									&&Anterior4Valor.contains("=") 
-									&& Anterior3Tipo==Token.CONSTANTE 
-									&& Anterior2Valor.equals("-")
-									&& Anterior1Tipo==Token.CONSTANTE){
-								
-								
-								if(nodo.anterior.anterior.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.MODIFICADOR){
-								
-								int x =0,auxRenglon=0;
-								for (int i = 0; i < tablasimbolos.size(); i++) {
-									if (tablasimbolos.get(i).getNombre().equals(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()) ){
-										x++;
-										auxRenglon=i;
-									}
-
-								}
-								if(nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.TIPO_DATO && x>0 && nodo.anterior.anterior.anterior.anterior.anterior.dato.getTipo()==Token.IDENTIFICADOR){
-									AppCompilador.enviarErrorSemantico(to.getLinea());
-									banderaErroresSemanticos=true;
-									impresion.add("Error semantico en linea "+to.getLinea()+ " la variable "+nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor()+" ya habia sido declarada en la linea "+tablasimbolos.get(auxRenglon).renglon);
-								} else {
-									tablasimbolos.add(new TabladeSimbolos(nodo.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"",nodo.anterior.anterior.anterior.anterior.anterior.anterior.dato.getValor(),"Global",to.getLinea()));
-								}
-									
-								
-							}
-							
-							
-							for (int i = 0; i < tablasimbolos.size(); i++) {
-								if (tablasimbolos.get(i).getNombre().equals(Anterior5Valor)){
-									aux=i;
-								}
-							}
-							
-							String tipo ="";
-							tipo = tablasimbolos.get(aux).getTipo();
-							
-							if (!tipo.equals(TipoCadena(Anterior3Valor)) && !tipo.equals(TipoCadena(Anterior1Valor)) ){
-								AppCompilador.enviarErrorSemantico(to.getLinea());
-								banderaErroresSemanticos=true;
-								impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos con el de la variable");
-							}else{
-								
-								if ((Anterior3Valor.equals("True") 
-										|| Anterior3Valor.equals("False"))&&(Anterior1Valor.equals("True") 
-												|| Anterior1Valor.equals("False"))){
-									impresion.add("Error semantico en linea "+to.getLinea()+ ", no se pueden restar 2 valores booleanos");
-								}
-								tablasimbolos.get(aux).setValor(Restar(Anterior3Valor,Anterior1Valor)+"");
-
-							}
-							
-						
+									expresion.remove(0);
+									expresion2.remove(0);
 
 							
 								
 
 						}
+
 
 							else if (Anterior3Tipo==Token.IDENTIFICADOR
 									&&Anterior2Tipo==Token.SIMBOLO
@@ -1100,6 +1099,13 @@ public class Analisis
 
 
 		return multi;
+	}
+	
+	
+	public String jerarquias (int i, String aux){
+		
+		
+		return aux;
 	}
 	
 }
