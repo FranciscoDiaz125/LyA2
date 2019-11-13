@@ -290,7 +290,7 @@ public class Analisis
 
 
 						if(Anterior1Tipo==Token.IDENTIFICADOR) {	
-							if(Siguiente1Tipo!=Token.CONSTANTE && !Siguiente1Valor.contains("(")){
+							if(Siguiente1Tipo!=Token.CONSTANTE && !Siguiente1Valor.contains("(") && Siguiente1Tipo!=Token.IDENTIFICADOR){
 								AppCompilador.enviarErrorSintactico(to.getLinea());
 								banderaErroresSintacticos = true;
 								impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba una constante");
@@ -362,7 +362,21 @@ public class Analisis
 									|| 
 									( Anterior3Tipo==Token.CONSTANTE 
 									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO
-									&& Anterior1Tipo==Token.CONSTANTE) ){
+									&& Anterior1Tipo==Token.CONSTANTE)
+									|| 
+									( Anterior3Tipo==Token.IDENTIFICADOR 
+									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO
+									&& Anterior1Tipo==Token.IDENTIFICADOR)
+									|| 
+									( Anterior3Tipo==Token.IDENTIFICADOR
+									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO
+									&& Anterior1Tipo==Token.CONSTANTE)
+									|| 
+									( Anterior3Tipo==Token.CONSTANTE 
+									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO
+									&& Anterior1Tipo==Token.IDENTIFICADOR)){
+								
+								
 								
 								NodoDoble<Token> nodoaux = nodo;
 								NodoDoble<Token> nodoaux2 = nodo;
@@ -387,6 +401,20 @@ public class Analisis
 									nodoaux = nodoaux.siguiente;
 								}
 								
+
+								
+								for (int i = 0; i < expresion.size(); i++) {
+									for (int j = 0; j < tablasimbolos.size(); j++) {
+										
+										if(tablasimbolos.get(j).getNombre().equals(expresion.get(i))){
+											System.out.println(tablasimbolos.get(j).getNombre());
+											System.out.println(expresion.get(i));
+											expresion.set(i, tablasimbolos.get(j).getValor());
+									}
+										
+									}
+									
+								}
 								
 								ArrayList<String> expresion2 = new ArrayList<String>(expresion);
 
@@ -623,6 +651,7 @@ public class Analisis
 											System.out.println(Tipo);
 											if(Tipo==2 ){
 												auxTipo = nodoaux2.anterior.dato.getValor();
+												auxNombre = nodoaux2.dato.getValor();
 												break;
 
 											}
@@ -630,7 +659,7 @@ public class Analisis
 											nodoaux2 = nodoaux2.anterior;
 										}
 									
-										while(nodoaux3!=null){
+										/*while(nodoaux3!=null){
 											nombre = nodoaux3.anterior.dato.getTipo();
 											System.out.println(nombre);
 											if(nombre==7){
@@ -639,7 +668,7 @@ public class Analisis
 											}
 											
 											nodoaux3 = nodoaux3.anterior;
-										}
+										}*/
 										
 									arbol.add(new Arbolito("=",expresion2.get(0)," ",auxNombre));
 									tablasimbolos.add(new TabladeSimbolos(auxNombre,Resultadofinal+"",auxTipo,"Global",to.getLinea()));

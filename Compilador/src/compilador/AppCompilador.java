@@ -59,7 +59,6 @@ public class AppCompilador extends JFrame implements ActionListener{
 		setLayout(new GridLayout(2,2));
 		//mitabla.setBackground(new Color(255,45,0));
 		setSize(1000,550);
-		setResizable(false);
 		setLocationRelativeTo(null);
 		creaInterFaz();
 		setVisible(true);
@@ -175,8 +174,15 @@ public class AppCompilador extends JFrame implements ActionListener{
 						Object datostabla2[]= {id2.operador,id2.argumento1,id2.argumento2,id2.resultado};
 
 						modelo2.addRow(datostabla2);
-					
+						
+						if(id2.operador.equals("=")){
+							Object datostabla3[]= {" "," "," "," "," "};
+							modelo2.addRow(datostabla3);
+						}
+						
 				}
+		
+
 
 			}
 		
