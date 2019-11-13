@@ -125,7 +125,7 @@ public class Analisis
 		else if(Arrays.asList("+","-","*","/").contains(token))
 			tipo = Token.OPERADOR_ARITMETICO;
 		else if(Arrays.asList("True","False").contains(token)||Pattern.matches("^[0-9]+$",token)
-				||Pattern.matches("[0-9]+.[0-9]+",token)||Pattern.matches("'[a-zA-Z]'",token)) 
+				||Pattern.matches("[0-9]+.[0-9]+",token)||Pattern.matches("'[a-zA-Z]'",token) ||Pattern.matches("-[0-9]+$",token)) 
 			tipo = Token.CONSTANTE;
 		else if(token.equals("class")) 
 			tipo =Token.CLASE;
@@ -435,14 +435,30 @@ public class Analisis
 											else if(expresion.get(i).contains("+"))
 												expresion.set(i, "Suma");
 											
-											else if(expresion.get(i).contains("-"))
+											else if(expresion.get(i).equals("-"))
 												expresion.set(i, "Resta");
 											
 										}
 										int Resultadofinal=0;
 										int contador =1;
 										
+										
+										
+										
 										for (int i = 0; i < expresion.size(); i++) {
+											
+											try{
+												if(Integer.parseInt(expresion.get(i)) <0){
+													expresion2.set(i,"temp"+contador);
+							
+													arbol.add(new Arbolito("-",expresion.get(i).substring(1)," " ,expresion2.get(i)));
+													contador++;
+
+												}	
+											}catch (Exception e){
+												e.getMessage();
+											}
+											
 											
 												
 												if(expresion.get(i).contains("ParAbierto") ){
