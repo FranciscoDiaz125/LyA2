@@ -1,5 +1,6 @@
 package compilador;
 import java.awt.Color;
+import java.awt.image.BandedSampleModel;
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -289,10 +290,11 @@ public class Analisis
 
 
 						if(Anterior1Tipo==Token.IDENTIFICADOR) {	
-							if(Siguiente1Tipo!=Token.CONSTANTE){
+							if(Siguiente1Tipo!=Token.CONSTANTE && !Siguiente1Valor.contains("(")){
 								AppCompilador.enviarErrorSintactico(to.getLinea());
 								banderaErroresSintacticos = true;
 								impresion.add("Error sintactico en la linea "+to.getLinea()+ " se esperaba una constante");
+								System.out.println("aaaaaaaaaaa");
 
 							}
 
@@ -348,9 +350,19 @@ public class Analisis
 									tablasimbolos.add(new TabladeSimbolos(Anterior3Valor,Anterior1Valor,Anterior4Valor,"Global",to.getLinea()));
 
 							}
-							else if (Anterior3Tipo==Token.CONSTANTE 
+							else if ( (Anterior4Tipo==Token.CONSTANTE 
+									&& Anterior3Tipo==Token.OPERADOR_ARITMETICO 
+									&& Anterior2Tipo==Token.CONSTANTE
+									&& Anterior1Valor.contains(")"))  
+									|| 
+									(Anterior4Tipo==Token.CONSTANTE
+									&& Anterior3Tipo==Token.SIMBOLO 
 									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO
-									&& Anterior1Tipo==Token.CONSTANTE){
+									&& Anterior1Tipo==Token.CONSTANTE) 
+									|| 
+									( Anterior3Tipo==Token.CONSTANTE 
+									&& Anterior2Tipo==Token.OPERADOR_ARITMETICO
+									&& Anterior1Tipo==Token.CONSTANTE) ){
 								
 								NodoDoble<Token> nodoaux = nodo;
 								NodoDoble<Token> nodoaux2 = nodo;
@@ -399,29 +411,154 @@ public class Analisis
 												expresion.set(i, "Resta");
 											
 										}
-										
 										int Resultadofinal=0;
-			
 										int contador =1;
+										
 										for (int i = 0; i < expresion.size(); i++) {
 											
-											if(expresion.get(i).contains("Multi")){
-												Resultadofinal =  multiplicar(expresion.get(i-1), expresion.get(i+1));
+												
+												if(expresion.get(i).contains("ParAbierto") ){
+													
+													if (expresion.get(i).contains("ParAbierto")){
+														
+														int aux5 = i;
+														int aux6 = 0 ;
+														boolean banderaParentesis = false;
+														
+														for (int j = 0; j < expresion.size(); j++) {
+															if(expresion.get(j).contains("ParCerrado")){
+															aux6 = j;
+															break;
+															}
+														}
+														
+														
+														while(!banderaParentesis){
+															
+														//(3 * 6 - 2)	
+															
+															for (int j = aux5; j < aux6; j++) {
+
+																if(expresion.get(j).contains("Div")){
+																	Resultadofinal =  dividir(expresion.get(j-1), expresion.get(j+1));
+																	expresion2.set(j,"temp"+contador);
+																	arbol.add(new Arbolito("/",expresion2.get(j-1),expresion2.get(j+1),expresion2.get(j)));
+																	
+																	expresion2.remove(j+1);
+																	expresion2.remove(j-1);
+																	
+																	expresion.set(j,Resultadofinal+"" );
+																	expresion.remove(j+1);
+																	expresion.remove(j-1);
+																	
+																	aux6 = aux6 - 2;
+																	contador++;
+																}
+																 if (expresion.get(j).contains("Multi")){
+																	Resultadofinal =  multiplicar(expresion.get(j-1), expresion.get(j+1));
+																	expresion2.set(j,"temp"+contador);
+																	arbol.add(new Arbolito("*",expresion2.get(j-1),expresion2.get(j+1),expresion2.get(j)));
+																	expresion2.remove(j+1);
+																	expresion2.remove(j-1);
+																	
+																	expresion.set(j,Resultadofinal+"" );
+																	expresion.remove(j+1);
+																	expresion.remove(j-1);
+																	aux6 = aux6 - 2;
+
+																	contador++;
+																}
+															}
+															
+															 if (expresion.get(i+2).contains("Suma")){
+																Resultadofinal =  Sumar(expresion.get(i+1), expresion.get(i+3));
+																expresion2.set(i+2,"temp"+contador);
+																arbol.add(new Arbolito("+",expresion2.get(i+1),expresion2.get(i+3),expresion2.get(i+2)));
+																expresion2.remove(i+3);
+																expresion2.remove(i+1);
+																
+																expresion.set(i+1,Resultadofinal+"" );
+																expresion.remove(i+2);
+																expresion.remove(i+2);
+																contador++;
+															}
+															 if (expresion.get(i+2).contains("Resta")){
+																Resultadofinal =  Restar(expresion.get(i+1), expresion.get(i+3));
+																expresion2.set(i+2,"temp"+contador);
+																arbol.add(new Arbolito("-",expresion2.get(i+1),expresion2.get(i+3),expresion2.get(i+2)));
+																expresion2.remove(i+3);
+																expresion2.remove(i+1);
+																
+																expresion.set(i+1,Resultadofinal+"" );
+																expresion.remove(i+2);
+																expresion.remove(i+2);
 											
-												expresion2.set(i,"temp"+contador);
+																contador++;
+															}
+															
+
+
+															if(expresion.get(i+2).contains("ParCerrado"))	{
+																expresion.remove(i+2);
+																expresion.remove(i);
+																expresion2.remove(i+2);
+																expresion2.remove(i);
+																banderaParentesis = true;
+															}
+															
+
+														
+															
+															
+														}
+													
+													}
+												}
+										}
+										
 											
-	
-												arbol.add(new Arbolito("*",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
-												expresion2.remove(i+1);
-												expresion2.remove(i-1);
-												
-												expresion.set(i-1,Resultadofinal+"" );
-												expresion.remove(i);
-												expresion.remove(i);
+											for (int i = 0; i < expresion.size(); i++) {
+
+											if(expresion.get(i).contains("Multi") || expresion.get(i).contains("Div")){
 												
 												
-												i--;
-												contador++;
+												if (expresion.get(i).contains("Multi")){
+													Resultadofinal =  multiplicar(expresion.get(i-1), expresion.get(i+1));
+													
+													expresion2.set(i,"temp"+contador);
+												
+		
+													arbol.add(new Arbolito("*",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
+													expresion2.remove(i+1);
+													expresion2.remove(i-1);
+													
+													expresion.set(i-1,Resultadofinal+"" );
+													expresion.remove(i);
+													expresion.remove(i);
+													
+													
+													i--;
+													contador++;
+												}
+												else if (expresion.get(i).contains("Div")){
+													Resultadofinal =  dividir(expresion.get(i-1), expresion.get(i+1));
+													
+													expresion2.set(i,"temp"+contador);
+												
+		
+													arbol.add(new Arbolito("/",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
+													expresion2.remove(i+1);
+													expresion2.remove(i-1);
+													
+													expresion.set(i-1,Resultadofinal+"" );
+													expresion.remove(i);
+													expresion.remove(i);
+													
+													
+													i--;
+													contador++;
+												}
+											
 											}
 											
 											
@@ -430,48 +567,52 @@ public class Analisis
 										
 										for (int i = 0; i < expresion.size(); i++) {
 											
-											if(expresion.get(i).contains("Suma")){
-												Resultadofinal =  Sumar(expresion.get(i-1), expresion.get(i+1));
+											if(expresion.get(i).contains("Suma") || expresion.get(i).contains("Resta")){
+												
+												if (expresion.get(i).contains("Suma")){
+
+													Resultadofinal =  Sumar(expresion.get(i-1), expresion.get(i+1));
+												
+													expresion2.set(i,"temp"+contador);
+													
+													
+													arbol.add(new Arbolito("+",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
+													expresion2.remove(i+1);
+													expresion2.remove(i-1);
+													
+													expresion.set(i-1,Resultadofinal+"" );
+													expresion.remove(i);
+													expresion.remove(i);
+													i--;
+													contador++;
+												}
+												
+												else if (expresion.get(i).contains("Resta")){
+													if(expresion.get(i).contains("Resta")){
+														Resultadofinal =  Restar(expresion.get(i-1), expresion.get(i+1));
 											
-												expresion2.set(i,"temp"+contador);
+														expresion2.set(i,"temp"+contador);
+														
+														
+														arbol.add(new Arbolito("-",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
+														expresion2.remove(i+1);
+														expresion2.remove(i-1);
+														
+														expresion.set(i-1,Resultadofinal+"" );
+														expresion.remove(i);
+														expresion.remove(i);
+														i--;
+														contador++;
+													}
+													
+												}
 												
-												
-												arbol.add(new Arbolito("+",expresion2.get(i-1),expresion2.get(i+1),expresion2.get(i)));
-												expresion2.remove(i+1);
-												expresion2.remove(i-1);
-												
-												expresion.set(i-1,Resultadofinal+"" );
-												expresion.remove(i);
-												expresion.remove(i);
-												i--;
-												contador++;
 											}
+
+												
 											
 										}
-										
-										for (int i = 0; i < expresion.size(); i++) {
-											
-											if(expresion.get(i).contains("Resta")){
-												Resultadofinal =  Restar(expresion.get(i-1), expresion.get(i+1));
-									
-
-												expresion2.set(i-1,"temp"+contador);
-												expresion2.remove(i);
-												expresion2.remove(i);
-	
-												arbol.add(new Arbolito("-",expresion.get(i-1),expresion.get(i+1),expresion2.get(i-1)));
-
-												expresion.set(i-1,Resultadofinal+"" );
-												expresion.remove(i);
-												expresion.remove(i);
-												i--;
-												contador++;
-											}
-											
-										}
-										
-
-										
+							
 
 				
 
@@ -688,8 +829,8 @@ public class Analisis
 					if(!operando1.contains(operando2)){
 						AppCompilador.enviarErrorSemantico(to.getLinea());
 						banderaErroresSemanticos=true;
-						impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos ("+operando1+"/"+operando2+")");
-
+						impresion.add("Error semantico en linea "+to.getLinea()+ ", no coinciden los tipos de los operandos ("+operando1+"/"+operando2+")");
+						System.out.println("33");
 					}
 
 
@@ -711,6 +852,8 @@ public class Analisis
 
 					}else
 					operando3= TipoCadena(Anterior1Valor);
+					if(operando3.equals(""))
+						operando3= "int";
 					
 					if (Siguiente1Tipo==Token.IDENTIFICADOR)
 					{
@@ -728,8 +871,8 @@ public class Analisis
 					if(!operando3.contains(operando4)){
 						AppCompilador.enviarErrorSemantico(to.getLinea());
 						banderaErroresSemanticos=true;
-						impresion.add("Error semantico en linea "+to.getLinea()+ ", no coindicen los tipos de los operandos ("+operando3+"/"+operando4+")");
-
+						impresion.add("Error semantico en linea "+to.getLinea()+ ", no coinciden los tipos de los operandos ("+operando3+"/"+operando4+")");
+						System.out.println("99");
 					}
 
 
@@ -1099,6 +1242,16 @@ public class Analisis
 
 
 		return multi;
+	}
+	
+	public int dividir (String uno, String dos){
+
+		int div =0;
+
+		div = div+ (int)( Integer.parseInt(uno)/Integer.parseInt(dos));
+
+
+		return div;
 	}
 	
 	

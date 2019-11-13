@@ -58,7 +58,7 @@ public class AppCompilador extends JFrame implements ActionListener{
 		
 		setLayout(new GridLayout(2,2));
 		//mitabla.setBackground(new Color(255,45,0));
-		setSize(850,550);
+		setSize(1000,550);
 		setResizable(false);
 		setLocationRelativeTo(null);
 		creaInterFaz();
