@@ -52,6 +52,7 @@ public class AppCompilador extends JFrame implements ActionListener{
 		}*/
 		new AppCompilador();
 	}
+	
 	public AppCompilador() {
 		super("Analizador Lexico y Sintáctico");
 		System.out.println("holaa");

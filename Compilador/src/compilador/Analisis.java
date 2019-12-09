@@ -192,14 +192,21 @@ public class Analisis
 			}else if (id2.operador.equals("=")) {
 				dataCodigo.add("                    ;ASIGNACION");
 			}
-			if(!id2.operador.equals("=")) {
+			if(!id2.operador.equals("=") && ( operation.equals("MUL") || operation.equals("DIV") )) {
 				dataCodigo.add("                    MOV	 AX,"+id2.argumento1);
 				dataCodigo.add("                    MOV	 BX,"+id2.argumento2);
 				dataCodigo.add("                    "+operation+" BX");
 				dataCodigo.add("                    MOV	 "+id2.resultado+", AX");
-			}else {
+			}
+			else if(!id2.operador.equals("=") && ( operation.equals("ADD") || operation.equals("SUB") )) {
 				dataCodigo.add("                    MOV	 AX,"+id2.argumento1);
-				dataCodigo.add("                    ADD "+id2.resultado+", AX");
+				dataCodigo.add("                    MOV	 BX,"+id2.argumento2);
+				dataCodigo.add("                    "+operation+" AX, BX");
+				dataCodigo.add("                    MOV	 "+id2.resultado+", AX");
+			}
+			else {
+				dataCodigo.add("                    MOV	 AX,"+id2.argumento1);
+				dataCodigo.add("                    MOV "+id2.resultado+", AX");
 			}
 		}
 		dataCodigo.add("MAIN            ENDP");
