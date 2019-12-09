@@ -33,6 +33,7 @@ public class AppCompilador extends JFrame implements ActionListener{
 	public NumeroLinea numLinea;
 	private JScrollPane barrita; 
 	private JList<String> tokens;
+	private JList<String> codigo;
 	private JTabbedPane documentos,consola,tabla,tabla2;
 	private String [] titulos ={"Tipo","Nombre","Valor","Alcance","Renglon"};
 	DefaultTableModel modelo = new DefaultTableModel(new Object[0][0],titulos);
@@ -137,6 +138,11 @@ public class AppCompilador extends JFrame implements ActionListener{
 		homero.setIcon(new ImageIcon("homero.gif"));
 		add(homero);
 		add(tabla2);
+		
+		codigo = new JList<String>();
+		consola.addTab("Codigo Intermedio",new JScrollPane(codigo) );
+
+		
 
 		
 		
@@ -152,6 +158,7 @@ public class AppCompilador extends JFrame implements ActionListener{
 			if(guardar()){
 				Analisis analisador = new Analisis(archivo.getAbsolutePath());
 				tokens.setListData(analisador.getmistokens().toArray( new String [0]));
+				codigo.setListData(analisador.getTabla3().toArray( new String [0] ));
 				modelo = new DefaultTableModel(new Object[0][0],titulos);
 				modelo2 = new DefaultTableModel(new Object[0][0],titulos2);
 

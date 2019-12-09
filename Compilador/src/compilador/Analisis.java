@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.plaf.synth.SynthSpinnerUI;
+
 public class Analisis
 {
 	int renglon=1;
@@ -15,9 +16,11 @@ public class Analisis
 	final Token vacio=new Token("", 9,0);
 	boolean bandera=true,banderaclase=false, banderaErroresSemanticos = false,banderaErroresSintacticos = false;
 	public ColorCeldas color = new ColorCeldas(4);
+	public String CodigoObjeto=null;
 	ArrayList<TabladeSimbolos> tablasimbolos = new ArrayList<TabladeSimbolos>();
 	ArrayList<Arbolito> arbol = new ArrayList<Arbolito>();
 	ArrayList<String> expresion = new ArrayList<String>();
+	private ArrayList<String> dataCodigo;
 
 
 	String Anterior1Valor;
@@ -34,7 +37,7 @@ public class Analisis
 	String Siguiente1Valor;
 	String Siguiente2Valor;
 	int Siguiente1Tipo;	
-	
+	String operation = "";
 	
 	public ArrayList<TabladeSimbolos> getTabla() {
 		return tablasimbolos ;
@@ -42,6 +45,10 @@ public class Analisis
 	
 	public ArrayList<Arbolito> getTabla2() {
 		return arbol ;
+	}
+	
+	public ArrayList<String> getTabla3() {
+		return dataCodigo ;
 	}
 	
 	public Analisis(String ruta) {//Recibe el nombre del archivo de texto
@@ -56,7 +63,8 @@ public class Analisis
 			Semantico2(tokens.getInicio());
 			VerificarClase(tokens.getInicio());
 			VerificarClase(tokens.getInicio());
-			
+			GenerarCodigoIntermedio(getTabla2());
+
 			if(!banderaclase){
 				impresion.add("Falta la inicialización de la clase!");
 			}
@@ -151,11 +159,56 @@ public class Analisis
 		
 	}
 	
-	
-	
-	
-	
-	
+
+	public void GenerarCodigoIntermedio(ArrayList<Arbolito> tabla) {
+		System.out.println("CODIGO INTERMEDIO");
+		dataCodigo = new ArrayList<String>();
+		dataCodigo.add("                    .MODEL                   small");
+		dataCodigo.add("                    .DATA ");
+		//DECLARAR VARIABLES
+		for (Arbolito item : getTabla2()) {
+			dataCodigo.add(item.resultado+"               DW                  0");
+		}
+		dataCodigo.add("                    .CODE");
+		dataCodigo.add("MAIN            PROC                     FAR");
+		dataCodigo.add("                    .STARTUP");
+		//dataCodigo.add("                    ;OPERACION = ''");
+		// OPERACIONES
+		for (int i=0; i < getTabla2().size(); i++) {
+			Arbolito id2 = getTabla2().get(i);								
+			System.out.println("Item: "+"[ "+id2.operador+", "+id2.argumento1+", "+id2.argumento2+", "+id2.resultado+" ]");
+			if(id2.operador.equals("+")) {
+				operation = "ADD";
+				dataCodigo.add("                    ;SUMA");
+			}else if (id2.operador.equals("-")) {
+				operation = "SUB";
+				dataCodigo.add("                    ;RESTA");
+			}else if (id2.operador.equals("*")) {
+				operation = "MUL";
+				dataCodigo.add("                    ;MULTIPLICACION");
+			}else if (id2.operador.equals("/")) {
+				operation = "DIV";
+				dataCodigo.add("                    ;DIVISION");
+			}else if (id2.operador.equals("=")) {
+				dataCodigo.add("                    ;ASIGNACION");
+			}
+			if(!id2.operador.equals("=")) {
+				dataCodigo.add("                    MOV	 AX,"+id2.argumento1);
+				dataCodigo.add("                    MOV	 BX,"+id2.argumento2);
+				dataCodigo.add("                    "+operation+" BX");
+				dataCodigo.add("                    MOV	 "+id2.resultado+", AX");
+			}else {
+				dataCodigo.add("                    MOV	 AX,"+id2.argumento1);
+				dataCodigo.add("                    ADD "+id2.resultado+", AX");
+			}
+		}
+		dataCodigo.add("MAIN            ENDP");
+		// IMPRESION
+		for (String item : dataCodigo) {
+			System.out.println(item);
+		}
+		
+	}
 
 
 
@@ -1299,6 +1352,9 @@ public class Analisis
 		return div;
 	}
 	
+	public String getmisObjetos() {
+		return CodigoObjeto;
+	}
 	
 	public String jerarquias (int i, String aux){
 		
